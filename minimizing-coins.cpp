@@ -6,19 +6,29 @@ int main() {
   cin.tie(NULL);
 
   int n, x;
-  int c[n];
-
   cin >> n >> x;
+  
+  int c[n];
   for (int i=0; i < n; ++i) cin >> c[i];
 
-  int dp[x + 1] = {1};
-
-  int best;
-  for (int i=1; i <= x; ++i) {
-    for (int j=0; j < n; ++j) best = min(best, dp[i - c[j]]);
-    dp[i] = best + 1;
+  unsigned int dp[x + 1];
+  memset(dp, UINT_MAX, sizeof(dp)); 
+  for (int i=0; i < x + 1; ++i) {
+    assert(dp[i] == UINT_MAX);
   }
 
-  cout << dp[n] << endl;
+  dp[0] = 0;
+
+  unsigned int best;
+  for (int i=1; i <= x; ++i) {
+    best = UINT_MAX;
+    for (int j=0; j < n; ++j)
+      best = min(best, i >= c[j] ? dp[i - c[j]] : UINT_MAX);
+
+    if (best < UINT_MAX) dp[i] = best + 1;
+  }
+
+  cout << (int)(dp[x] < UINT_MAX ? dp[x] : -1) << endl;
+
   return 0;
 }
