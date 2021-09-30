@@ -17,11 +17,7 @@ int main() {
   unsigned int dp[x + 1] = {1};
 
   for (int i=1; i <= x; ++i) {
-    unsigned int last = UINT_MAX;
     for (int j=0; j < n; ++j) {
-      if (c[j] == last) continue;
-      else last = c[j];
-
       dp[i] += i >= c[j] ? dp[i - c[j]] : 0;
       dp[i] %= MOD;
     }
