@@ -11,8 +11,9 @@ class BSTNode:
     right: Optional[BSTNode] = None
 
     def __repr__(self):
-        return '[{},  left: {}, right: {}]'.format(
+        return '[{} ({}),  left: {}, right: {}]'.format(
                 self.val,
+                self.count,
                 self.left,
                 self.right
         )
@@ -22,7 +23,7 @@ class BSTNode:
 class BST:
     root: Optional[TreeNode] = None
 
-    def is_empty() -> bool:
+    def is_empty(self) -> bool:
         return self.root is None
     
     def _insert(self, node: Optional[BSTNode], key: int) -> BSTNode:
@@ -58,7 +59,7 @@ class BST:
                         while succ.left:
                             pre, succ = succ, succ.left
 
-                        node.val, node.count = node.right.val, node.right.count
+                        node.val, node.count = succ.val, succ.count
                         pre.left = None
             else:
                 raise Exception('invariant not held')
@@ -78,9 +79,9 @@ class BST:
         if node.val == key:
             return node
         elif key < node.val:
-            return _find(node.left, key)
+            return self._find(node.left, key)
         else:
-            return _find(node.right, key)
+            return self._find(node.right, key)
 
     def find(self, key: int) -> Optional[BSTNode]:
         return self._find(self.root, key)
@@ -91,7 +92,7 @@ class BST:
         
         if node.val > key and node.left:
             return self._upper_bound(node.left, key)
-        elif node.val <= key and node.right:
+        elif node.val <= key:
             return self._upper_bound(node.right, key)
         return node
 
@@ -102,9 +103,9 @@ class BST:
         if not node:
             return None
 
-        if node.val >= key and node.left:
+        if node.val > key:
             return self._lower_bound(node.left, key)
-        elif node.val < key and node.right:
+        elif node.val <= key and node.right:
             return self._lower_bound(node.right, key)
         return node
 

@@ -3,15 +3,7 @@ from typing import Optional
 from dataclasses import dataclass
 from collections import OrderedDict
 from bisect import bisect_right, bisect_left
-
-nstr, mstr = input().split()
-n, m = int(nstr), int(mstr)
-
-h = list(map(int, input().split()))
-t = list(map(int, input().split()))
-
-h.sort()
-
+from collections import deque
 
 @dataclass
 class BSTNode:
@@ -20,18 +12,26 @@ class BSTNode:
     left: Optional[BSTNode] = None
     right: Optional[BSTNode] = None
 
+    def __repr__(self):
+        return '[{} ({}),  left: {}, right: {}]'.format(
+                self.val,
+                self.count,
+                self.left,
+                self.right
+        )
+
 
 @dataclass
 class BST:
     root: Optional[TreeNode] = None
 
-    def is_empty() -> bool:
+    def is_empty(self) -> bool:
         return self.root is None
-    
+
     def _insert(self, node: Optional[BSTNode], key: int) -> BSTNode:
         if node is None:
             return BSTNode(key)
-        
+
         if node.val == key:
             node.count += 1
         elif key < node.val:
@@ -61,7 +61,7 @@ class BST:
                         while succ.left:
                             pre, succ = succ, succ.left
 
-                        node.val, node.count = node.right.val, node.right.count
+                        node.val, node.count = succ.val, succ.count
                         pre.left = None
             else:
                 raise Exception('invariant not held')
@@ -81,9 +81,9 @@ class BST:
         if node.val == key:
             return node
         elif key < node.val:
-            return _find(node.left, key)
+            return self._find(node.left, key)
         else:
-            return _find(node.right, key)
+            return self._find(node.right, key)
 
     def find(self, key: int) -> Optional[BSTNode]:
         return self._find(self.root, key)
@@ -91,10 +91,10 @@ class BST:
     def _upper_bound(self, node: Optional[BSTNode], key: int) -> Optional[BSTNode]:
         if not node:
             return None
-        
+
         if node.val > key and node.left:
             return self._upper_bound(node.left, key)
-        elif node.val <= key and node.right:
+        elif node.val <= key:
             return self._upper_bound(node.right, key)
         return node
 
@@ -105,9 +105,9 @@ class BST:
         if not node:
             return None
 
-        if node.val >= key and node.left:
+        if node.val > key:
             return self._lower_bound(node.left, key)
-        elif node.val < key and node.right:
+        elif node.val <= key and node.right:
             return self._lower_bound(node.right, key)
         return node
 
@@ -122,6 +122,89 @@ class BST:
 
         return node
 
+    def bfs(self, fun) -> None:
+        queue = deque([self.root])
+
+        while queue:
+            node = queue.popleft()
+
+            if not node:
+                continue
+
+            fun(node)
+            queue.append(node.left)
+            queue.append(node.right)
+
+    def preorder(self, fun) -> None:
+        stack = [self.root]
+        while stack:
+            node = stack.pop()
+
+            if not node:
+                continue
+
+            fun(node)
+            stack.append(node.left)
+            stack.append(node.right)
+
+    def inorder(self, fun) -> None:
+        stack = [(False, self.root)]
+        while stack:
+            visiting, node = stack.pop()
+
+            if not node:
+                continue
+
+            if visiting:
+                fun(node)
+            else:
+                stack.append((False, node.right))
+                stack.append((True, node))
+                stack.append((False, node.left))
+
+    def postorder(self, fun) -> None:
+        stack = [(False, self.root)]
+        while stack:
+            visiting, node = stack.pop()
+
+            if not node:
+                continue
+
+            if visiting:
+                fun(node)
+            else:
+                stack.append((False, node.right))
+                stack.append((False, node.left))
+                stack.append((True, node))
+
+    def layers(self) -> list[list[BSTNode]]:
+        result = []
+
+        layer, next_layer = deque([self.root]), deque()
+        while layer:
+            result_layer = list(filter(None, layer))
+            if result_layer:
+                result.append(result_layer)
+
+            for node in layer:
+                if not node: continue
+                next_layer.append(node.left)
+                next_layer.append(node.right)
+
+            layer = next_layer
+            next_layer = deque()
+
+        return result
+
+
+
+nstr, mstr = input().split()
+n, m = int(nstr), int(mstr)
+
+h = list(map(int, input().split()))
+t = list(map(int, input().split()))
+
+h.sort()
 
 prices = BST()
 for price in h[len(h) // 2: ]:
@@ -131,11 +214,14 @@ for price in h[: len(h) // 2]:
     prices.insert(price)
 
 for budget in t:
+    #print('buy:', budget, 'from:', prices)
     if not prices:
         print(-1)
         continue
 
+
     last_leq_node = prices.lower_bound(budget)
+    #print(last_leq_node)
     if not last_leq_node:
         print(-1)
     else:
